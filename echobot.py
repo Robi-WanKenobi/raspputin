@@ -1,6 +1,7 @@
 import json
 import requests
 import time
+import datetime
 from bot_keys import bot_token
 
 TOKEN = bot_token
@@ -52,7 +53,10 @@ def echo_all(updates):
         try:
             text = update["message"]["text"]
             chat = update["message"]["chat"]["id"]
-            send_message(text, chat)
+            if text.lower() == "hora":
+                send_message(datetime.datetime.now())
+            else:
+                send_message(text, chat)
         except Exception as e:
             print(e)
 
