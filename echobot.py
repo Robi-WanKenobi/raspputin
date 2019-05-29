@@ -54,7 +54,7 @@ def echo_all(updates):
             text = update["message"]["text"]
             chat = update["message"]["chat"]["id"]
             if text.lower() == "hora":
-                send_message(datetime.datetime.now())
+                send_message(datetime.datetime.now(), chat)
             else:
                 send_message(text, chat)
         except Exception as e:
