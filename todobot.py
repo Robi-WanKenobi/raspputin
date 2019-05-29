@@ -1,10 +1,11 @@
 import json
 import requests
 import time
-import datetime
 import urllib
 from config.bot_keys import bot_token
+from persistence.dbhelper import DBHelper
 
+db = DBHelper()
 TOKEN = bot_token
 URL = "https://api.telegram.org/bot{}/".format(TOKEN)
 
@@ -44,36 +45,52 @@ def get_last_chat_id_and_text(updates):
     return (text, chat_id)
 
 
-def send_message(text, chat_id):
+def send_message(text, chat_id, reply_markup=None):
     text = urllib.parse.quote_plus(text)
-    url = URL + "sendMessage?text={}&chat_id={}".format(text, chat_id)
+    url = URL + "sendMessage?text={}&chat_id={}&parse_mode=Markdown".format(text, chat_id)
+    if reply_markup:
+        url += "&reply_markup={}".format(reply_markup)
     get_url(url)
 
 
-def echo_all(updates):
+def build_keyboard(items):
+    keyboard = [[item] for item in items]
+    reply_markup = {"keyboard":keyboard, "one_time_keyboard": True}
+    return json.dumps(reply_markup)
+
+
+def handle_updates(updates):
     for update in updates["result"]:
-        try:
-            text = update["message"]["text"]
-            chat = update["message"]["chat"]["id"]
-            if text.lower() == "hora":
-                reply = (datetime.datetime.now()).strftime('Son las %H:%M')
-            elif text.lower() == "fecha":
-                reply = (datetime.date.today()).strftime('Hoy es %d/%m/%Y')
-            else:
-                reply = text
-            send_message(reply, chat)
-        except Exception as e:
-            print(e)
+        text = update["message"]["text"]
+        chat = update["message"]["chat"]["id"]
+        items = db.get_items()
+        if text.lower() == "/lista":
+            message = "\n".join(items)
+            send_message(message, chat)
+        elif text.lower() == "/borrar":
+            keyboard = build_keyboard(items)
+            send_message("Selecciona un elemento para borrarlo.\nEscribe uno nuevo para añadirlo.", chat, keyboard)
+        elif text in items:
+            db.delete_item(text)
+            items = db.get_items()
+            keyboard = build_keyboard(items)
+            send_message("Selecciona un elemento para borrarlo.\nEscribe uno nuevo para añadirlo.", chat, keyboard)
+        else:
+            db.add_item(text)
+            items = db.get_items()
+            message = "\n".join(items)
+            send_message(message, chat)
 
 
 def main():
+    db.setup()
     last_update_id = None
     while True:
         print("getting updates")
         updates = get_updates(last_update_id)
         if len(updates["result"]) > 0:
             last_update_id = get_last_update_id(updates) + 1
-            echo_all(updates)
+            handle_updates(updates)
         time.sleep(0.5)
 
 
