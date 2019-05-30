@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import json
 import requests
 import time
@@ -69,7 +71,6 @@ def echo_all(updates):
 def main():
     last_update_id = None
     while True:
-        print("getting updates")
         updates = get_updates(last_update_id)
         if len(updates["result"]) > 0:
             last_update_id = get_last_update_id(updates) + 1

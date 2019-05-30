@@ -1,4 +1,5 @@
 # coding=utf-8
+#!/usr/bin/env python3
 
 import json
 import requests
@@ -88,7 +89,6 @@ def main():
     db.setup()
     last_update_id = None
     while True:
-        print("getting updates")
         updates = get_updates(last_update_id)
         if len(updates["result"]) > 0:
             last_update_id = get_last_update_id(updates) + 1
