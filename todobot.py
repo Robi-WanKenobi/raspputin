@@ -76,7 +76,7 @@ def handle_updates(updates):
             keyboard = build_keyboard(items)
             send_message("Selecciona un elemento para borrarlo.\nEscribe uno nuevo para añadirlo.", chat, keyboard)
         else:
-            db.delete_item(text, chat)
+            db.add_item(text, chat)
             items = db.get_items(chat)
             message = "\n".join(items)
             send_message(message, chat)
